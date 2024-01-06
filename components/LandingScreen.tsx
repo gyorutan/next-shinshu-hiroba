@@ -1,10 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { test } from "@/helper/zz";
 import { LogIn, Pyramid, UserRoundPlus } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 
 const LandingScreen = () => {
+  useEffect(() => {
+    test();
+  });
   return (
     <>
       <div className="h-screen flex flex-col gap-12 justify-center items-center">

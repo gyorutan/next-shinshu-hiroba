@@ -26,8 +26,16 @@ const PostItems = () => {
 
   const fetchAllPosts = async () => {
     const response = await axios.get(`${api}/post`);
-    const result = await response.data;
+    const result = response.data;
     setPosts(result.posts);
+
+    // const response = await fetch(`${api}/post`, {
+    //   method: "GET",
+    // });
+
+    // const result = await response.json();
+
+    // console.log(result);
   };
 
   useEffect(() => {
