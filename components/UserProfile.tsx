@@ -83,13 +83,15 @@ const UserProfile = () => {
     <>
       <div className="space-y-6">
         <div className="flex flex-col justify-center items-center gap-4">
-          <Image
-            src={userImageUrl!}
-            height={100}
-            width={100}
-            alt="Profile Image"
-            className="rounded-full"
-          />
+          {userImageUrl ? (
+            <Image
+              src={userImageUrl!}
+              height={100}
+              width={100}
+              alt="Profile Image"
+              className="rounded-full"
+            />
+          ) : null}
           <div className="flex items-center gap-2">
             <Button variant={"blue"} type="button" className="font-bold">
               <label
