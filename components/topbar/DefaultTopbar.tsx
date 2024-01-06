@@ -6,18 +6,51 @@ import {
   SheetClose,
   SheetContent,
   SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useScrollTop } from "@/hooks/useScrollTop";
 import { Button } from "../ui/button";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import axios from "axios";
+import { api } from "@/helper/api";
+import toast from "react-hot-toast";
+import useAuthStore from "@/state/store";
+import Image from "next/image";
 
 const DefaultTopbar = () => {
+  const pathname = usePathname();
   const router = useRouter();
   const scroll = useScrollTop();
+
+  const { username, userLoggedIn, userImageUrl, setUsername, setUserLoggedIn } =
+    useAuthStore();
+
+  const clearStorage = () => {
+    useAuthStore.persist.clearStorage();
+  };
+
+  console.log(username);
+  console.log(userLoggedIn);
+
+  const LogOut = async () => {
+    const response = await axios.get(`${api}/auth/logout`, {
+      withCredentials: true,
+    });
+
+    const result = await response.data;
+    console.log(result);
+
+    if (result.success) {
+      setUsername(null);
+      setUserLoggedIn(false);
+      clearStorage();
+      toast.success(result.message);
+      router.push("/");
+    }
+  };
+
   return (
     <>
       <div
@@ -26,48 +59,86 @@ const DefaultTopbar = () => {
           scroll && "hidden"
         )}
       >
-        <Link href={"/main"}>
-          <Pyramid size={36} fill="#486081" />
-        </Link>
+        {pathname === "/write" ? (
+          <>
+            <div className="p-2 w-[40px]"></div>
+            <span className="text-lg font-bold">게시물 작성</span>
+          </>
+        ) : (
+          <Link href={"/main"}>
+            <Pyramid size={36} fill="#486081" />
+          </Link>
+        )}
         <Sheet>
           <SheetTrigger className="hover:bg-gray-700 rounded-full transition">
             <Menu size={40} className="p-2" />
           </SheetTrigger>
-          <SheetContent className="w-[300px] lg:w-[400px] bg-gray-700 border-l border-gray-600">
-            <SheetHeader>
-              <SheetTitle className="text-white mt-5">닉네임</SheetTitle>
-              <div className="flex flex-col justify-center gap-2 p-5">
+          <SheetContent className="w-[300px] bg-gray-700 border-l border-gray-600">
+            <SheetHeader className="mt-8">
+              {userLoggedIn ? (
+                <>
+                  <div className="flex flex-col w-full gap-4">
+                    <div className="flex gap-2 items-center w-full h-[60px]">
+                      <div className="w-[70px] h-[50px] flex justify-center items-center">
+                        <Image
+                          className="bg-gray-600 rounded-full"
+                          src={userImageUrl!}
+                          height={40}
+                          width={40}
+                          alt="profile"
+                        />
+                      </div>
+                      <div className="w-[80%] h-full flex justify-start items-center">
+                        <div className="text-white text-lg font-bold">
+                          {username} 님
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 grid-rows-2 gap-2">
+                      <Button>내가 쓴 글</Button>
+                      <Button>내가 쓴 댓글</Button>
+                      <Button>좋아요 글</Button>
+                      <SheetClose asChild>
+                        <Button
+                          asChild
+                          variant={"emerald"}
+                          className="font-bold"
+                        >
+                          <Link href={"/write"}>글쓰기</Link>
+                        </Button>
+                      </SheetClose>
+                    </div>
+                  </div>
+                </>
+              ) : (
                 <SheetClose asChild>
-                  <Button>내 정보</Button>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Button>내가 쓴 글</Button>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Button>내가 쓴 댓글</Button>
-                </SheetClose>
-                <SheetClose asChild>
-                  <Button variant={"emerald"} className="font-bold">
-                    글쓰기
+                  <Button asChild variant={"emerald"} className="font-bold">
+                    <Link href={"/login"}>로그인</Link>
                   </Button>
                 </SheetClose>
-                <SheetClose asChild className="absolute left-12 bottom-10">
-                  <Button variant={"blue"} className="font-bold">
-                    계정 설정
-                  </Button>
-                </SheetClose>
-                <SheetClose asChild className="absolute right-12 bottom-10">
-                  <Button
-                    onClick={() => {
-                      router.push("/");
-                    }}
-                    variant={"destructive"}
-                    className="font-bold"
-                  >
-                    로그아웃
-                  </Button>
-                </SheetClose>
-              </div>
+              )}
+              {userLoggedIn ? (
+                <div className="bg-gray-600 border-t border-gray-500 flex justify-center w-full left-0 py-6 absolute bottom-0">
+                  <div className="flex gap-4">
+                    <SheetClose asChild>
+                      <Button asChild variant={"blue"} className="font-bold">
+                        <Link href={"/profile"}>내 정보</Link>
+                      </Button>
+                    </SheetClose>
+                    <SheetClose asChild>
+                      <Button
+                        onClick={() => {
+                          LogOut();
+                        }}
+                        variant={"destructive"}
+                        className="font-bold"
+                      >
+                        로그아웃
+                      </Button>
+                    </SheetClose>
+                  </div>
+                </div>
+              ) : null}
             </SheetHeader>
           </SheetContent>
         </Sheet>

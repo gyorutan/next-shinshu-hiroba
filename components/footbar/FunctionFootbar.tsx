@@ -8,9 +8,10 @@ import {
   RotateCw,
 } from "lucide-react";
 import { Button } from "../ui/button";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 const FunctionFootbar = () => {
+  const pathname = usePathname();
   const router = useRouter();
   const gotoTop = () => {
     window.scroll({
@@ -53,7 +54,7 @@ const FunctionFootbar = () => {
         </Button>
         <Button
           onClick={() => {
-            router.refresh();
+            window.location.reload();
           }}
           className="w-full flex justify-center rounded-none bg-inherit hover:bg-gray-500 transition"
         >

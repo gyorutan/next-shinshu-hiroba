@@ -2,7 +2,7 @@ import PostItems from "@/components/post/PostItems";
 
 const BoardPage = () => {
   return (
-    <div className="flex flex-col justify-center items-center bg-gray-900">
+    <div className="flex flex-col min-h-screen bg-gray-900">
       <PostItems />
     </div>
   );

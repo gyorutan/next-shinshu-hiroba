@@ -52,6 +52,7 @@ const SignupForm = () => {
     pageData.passwordConfirmDisable,
   ]);
 
+  // 폼 리셋
   const resetFormData = () => {
     setFormData({
       ...formData,
@@ -64,12 +65,13 @@ const SignupForm = () => {
     });
   };
 
-  // CheckingValue
+  // 인풋 Validation
   const checkingValue = async (name: string, value: string) => {
     const usernameRegex = new RegExp("^[a-zA-Z0-9ぁ-んァ-ン一-龯]{3,10}$");
     const studentIdRegex = new RegExp("^[0-9]{2}[a-z]{1}[0-9]{4}[a-z]{1}$");
     const passwordRegex = new RegExp("^[a-zA-Z0-9]{6,20}$");
 
+    // Username Validation
     if (name === "username" && !value) {
       setIsChecking({ ...isChecking, username: "normal" });
       return;
@@ -86,6 +88,7 @@ const SignupForm = () => {
       }
     }
 
+    // StudentId Validation
     if (name === "studentId" && !value) {
       setIsChecking({ ...isChecking, studentId: "normal" });
       return;
@@ -103,22 +106,17 @@ const SignupForm = () => {
       }
     }
 
-    // password의 값이 null일때
+    // Password Validation
     if (name === "password" && !value) {
       setIsChecking({ ...isChecking, password: "normal" });
       setPageData({ ...pageData, passwordConfirmDisable: true });
       return;
-    }
-    // null이 아니면 password의 정규식 검증
-    else if (name === "password" && value) {
+    } else if (name === "password" && value) {
       const result = passwordRegex.test(value);
-      // password의 정규식 검증이 통과하면 상태 변경
       if (result) {
         setIsChecking({ ...isChecking, password: "available-password" });
         setPageData({ ...pageData, passwordConfirmDisable: false });
-      }
-      // 정규식 검증에 실패했을때
-      else {
+      } else {
         setIsChecking({ ...isChecking, password: "regex" });
         setPageData({ ...pageData, passwordConfirmDisable: true });
         return;
@@ -178,6 +176,7 @@ const SignupForm = () => {
     setPageData({ ...pageData, screenNumber: 3 });
   };
 
+  // 회원가입
   const handleSignUp = async (e: ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (

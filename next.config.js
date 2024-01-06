@@ -4,7 +4,12 @@ const nextConfig = {
     SERVER_API: process.env.SERVER_API,
   },
   images: {
-    domains: ["gyorutan-images.s3.ap-northeast-1.amazonaws.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "gyorutan-images.s3.ap-northeast-1.amazonaws.com",
+      },
+    ],
   },
 };
 

@@ -3,38 +3,79 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/helper/api";
+import { calculatePostTime } from "@/helper/formatting";
+import useAuthStore from "@/state/store";
 import axios from "axios";
-import { AlertCircle, Share2, ThumbsDown, ThumbsUp } from "lucide-react";
+import { AlertCircle, Share2, ThumbsUp } from "lucide-react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Modal from "../Modal";
+import toast from "react-hot-toast";
 
 interface PostProps {
-  _id: string;
-  writerId: string;
+  id: string;
+  userId: string;
+  genre: string;
   writer: string;
   title: string;
   content: string;
   imageUrl: string;
+  likes: string[];
+  createdAt: Date;
 }
 
 const PostDetail = () => {
+  const router = useRouter();
   const { postId } = useParams();
-  const [post, setPost] = useState<PostProps>({
-    _id: "",
-    writerId: "",
-    writer: "",
-    title: "",
-    content: "",
-    imageUrl: "",
-  });
-  // const [writedComment, setWritedComment] = useState("");
+  const [post, setPost] = useState<PostProps | null>(null);
+  const [writerImageUrl, setWriterImageUrl] = useState("");
+
+  const [open, setOpen] = useState(false);
+
+  const { username } = useAuthStore();
 
   const fetchPostDetail = async () => {
     const response = await axios.get(`${api}/post/${postId}`);
     const result = await response.data;
-    console.log(result);
     setPost(result.post);
+    fetchWriterImageUrl(result.post.userId);
+  };
+
+  const fetchWriterImageUrl = async (id: string) => {
+    const response = await axios(`${api}/users/profile/${id}`, {
+      withCredentials: true,
+    });
+
+    const result = await response.data;
+
+    console.log(result.user);
+
+    setWriterImageUrl(result.user.userImageUrl);
+  };
+
+  const postLike = async () => {
+    await axios.patch(
+      `${api}/post/likes`,
+      { postId },
+      {
+        withCredentials: true,
+      }
+    );
+    fetchPostDetail();
+  };
+
+  const deletePost = async (id: string) => {
+    console.log(id);
+    const response = await axios.delete(`${api}/post/${id}`, {
+      withCredentials: true,
+    });
+    const result = await response.data;
+    console.log(result);
+    if (result.success) {
+      toast.success(result.message);
+      router.push("/board");
+    }
   };
 
   useEffect(() => {
@@ -45,44 +86,73 @@ const PostDetail = () => {
   return (
     <div className="pt-14">
       <div className="flex flex-col p-5 gap-3 border-b-[1px] border-gray-600">
-        <div className="text-lg">{post.title}</div>
-        <div className="text-sm text-opacity-90 text-gray-100 space-y-1">
-          <p>
-            장르&nbsp;&nbsp;
-            <span className="text-gray-300 text-opacity-30">|</span>
-            &nbsp;&nbsp;8시간전&nbsp;&nbsp;
-            <span className="text-gray-300 text-opacity-30">|</span>
-            &nbsp;&nbsp;{post.writer}
-          </p>
-          <p>
-            조회수 1,000,000&nbsp;&nbsp;
-            <span className="text-gray-300 text-opacity-30">|</span>
-            &nbsp;&nbsp;댓글 100&nbsp;&nbsp;
-            <span className="text-gray-300 text-opacity-30">|</span>
-            &nbsp;&nbsp;추천 4,748
-          </p>
+        <div className="text-lg">{post?.title}</div>
+        <div className="text-sm text-opacity-90 text-gray-100 flex justify-between items-center">
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-3 items-center">
+              <span>{post?.genre}</span>
+              <span className="text-gray-300 text-opacity-30">|</span>
+              <span>{calculatePostTime(post?.createdAt!)}</span>
+              <span className="text-gray-300 text-opacity-30">|</span>
+              <span className="flex gap-1.5 items-center">
+                {writerImageUrl ? (
+                  <Image
+                    src={writerImageUrl}
+                    width={22}
+                    height={22}
+                    alt="writer profile"
+                    className="rounded-full"
+                  />
+                ) : null}
+                <span>{post?.writer}</span>
+              </span>
+            </div>
+            <div className="flex gap-3 items-center">
+              <span>조회수 1,000,000</span>
+              <span className="text-gray-300 text-opacity-30">|</span>
+              댓글 100
+              <span className="text-gray-300 text-opacity-30">|</span>
+              <span>추천 {post?.likes.length}</span>
+            </div>
+          </div>
+          {username === post?.writer ? (
+            <div className="flex gap-2">
+              <Button className="bg-inherit border border-gray-500 hover:bg-gray-700">
+                수정
+              </Button>
+              <Button
+                onClick={() => setOpen(true)}
+                variant={"destructive"}
+                className="font-bold"
+              >
+                삭제
+              </Button>
+            </div>
+          ) : null}
         </div>
       </div>
-      <div className="p-5 space-y-6 border-b-[1px] border-gray-600">
-        {post.imageUrl ? (
-          <Image src={post.imageUrl} alt="" height={100} width={100} />
+      <div className="p-8 space-y-8 border-b-[1px] border-gray-600">
+        {post?.imageUrl ? (
+          <Image
+            src={post?.imageUrl}
+            alt=""
+            height={"500"}
+            width={"500"}
+            className="h-[50%] w-[50%]"
+          />
         ) : null}
-        <p>{post.content}</p>
+        <p>{post?.content}</p>
       </div>
       <div className="flex justify-center items-center py-3 gap-3 border-b-[1px] border-gray-600">
         <Button
+          onClick={() => {
+            postLike();
+          }}
           variant={"outline"}
           className="bg-inherit hover:bg-gray-700 hover:text-white border-gray-500 px-5 flex gap-3"
         >
           <ThumbsUp size={20} fill="#9ca3af" />
-          <span>4,748</span>
-        </Button>
-        <Button
-          variant={"outline"}
-          className="bg-inherit hover:bg-gray-700 hover:text-white border-gray-500 px-5 flex gap-3"
-        >
-          <ThumbsDown size={20} fill="#9ca3af" />
-          <span>320</span>
+          <span>{post?.likes.length}</span>
         </Button>
       </div>
       <div className="py-1 px-4 border-b-[1px] border-gray-700 bg-gray-700 flex justify-end">
@@ -149,7 +219,6 @@ const PostDetail = () => {
           </Button>
         </div>
       </div>
-      {/* ) : null} */}
       <div className="">
         <div className="p-4 border-b-[1px] border-gray-900">어쩌구</div>
         <div className="p-4 border-b-[1px] border-gray-900">어쩌구</div>
@@ -160,8 +229,17 @@ const PostDetail = () => {
         <div className="p-4 border-b-[1px] border-gray-900">어쩌구</div>
         <div className="p-4 border-b-[1px] border-gray-900">어쩌구</div>
       </div>
+      <Modal
+        open={open}
+        setOpen={setOpen}
+        deletePost={deletePost}
+        postId={post?.id}
+      />
     </div>
   );
 };
 
 export default PostDetail;
+function loginCheck(state: boolean) {
+  throw new Error("Function not implemented.");
+}
